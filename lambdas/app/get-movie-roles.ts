@@ -1,6 +1,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import {
+  actorKey,
   ddb,
   isRoleItem,
   movieKey,
@@ -20,23 +21,45 @@ export const handler = async (
   if (movieId === undefined) {
     return response(400, { message: "movieID must be a positive integer" });
   }
+
+  const actorParam = event.queryStringParameters?.actor;
+  const actorId = parseId(actorParam);
+
+  if (actorParam !== undefined && actorId === undefined) {
+    return response(400, { message: "actor must be a positive integer" });
+  }
+
   try {
+    const movieResult = await ddb.send(
+      new GetCommand({
+        TableName: tableName,
+        Key: { PK: movieKey(movieId), SK: movieKey(movieId) },
+      })
+    );
+
+    if (!movieResult.Item) {
+      return response(404, { message: `Movie ${movieId} not found` });
+    }
+
     const queryResult = await ddb.send(
       new QueryCommand({
         TableName: tableName,
-        KeyConditionExpression: "PK = :pk",
-        ExpressionAttributeValues: { ":pk": movieKey(movieId) },
-        // ExclusiveStartKey: lastKey,
+        KeyConditionExpression:
+          actorId !== undefined ? "PK = :pk AND SK = :sk" : "PK = :pk",
+        ExpressionAttributeValues:
+          actorId !== undefined
+            ? { ":pk": movieKey(movieId), ":sk": actorKey(actorId) }
+            : { ":pk": movieKey(movieId) },
       })
     );
 
     const resultItems = queryResult.Items ?? [];
     return response(200, { data: resultItems.filter(isRoleItem).map(toRole) });
-  } catch (err) {
-    console.error("DynamoDB error:", err);
-    return response(500, {
-      message: "Internal server error",
-      error: err,
+        } catch (err) {
+          console.error("DynamoDB error:", err);
+          return response(500, {
+            message: "Internal server error",
+            error: err,
     });
   }
 };
