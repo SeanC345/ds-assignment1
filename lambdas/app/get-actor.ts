@@ -7,6 +7,7 @@ import {
   parseId,
   tableName,
   toActor,
+  toRole,
 } from "../shared/db";
 import { response } from "../shared/http";
 import { logRequest } from "../shared/request-logger";
@@ -48,6 +49,8 @@ export const handler = async (
       );
 
       if(roleResult.Item) {
+        const role = toRole(roleResult.Item);
+        
         return response(200, {
           data: {
             ...actor,
