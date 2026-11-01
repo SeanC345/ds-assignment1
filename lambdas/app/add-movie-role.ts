@@ -88,6 +88,7 @@ export const handler = async (
               SK: actorKey(role.actorId),
               ...role,
             },
+            ConditionExpression: "attribute_not_exists(PK) AND attribute_not_exists(SK)", 
           },
         },
       ],
