@@ -98,6 +98,16 @@ export const handler = async (
   return response(201, { message: "Role added", data: role });
   } catch (err) {
     console.error("DynamoDB error:", err);
+
+    if (
+      err instanceof Error &&
+      err.name === "TransactionCanceledException"
+    ){
+      return response(409, {
+        message: "Role already exists for this movie and actor",
+      });
+    }
+    
     return response(500, {
       message: "Internal server error"
     });
