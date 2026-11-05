@@ -54,7 +54,7 @@ export const handler = async (
         return response(200, {
           data: {
             ...actor,
-            roleDescription: roleResult.Item.roleDescription,
+            roleDescription: role.roleDescription,
           },
         });
       }
