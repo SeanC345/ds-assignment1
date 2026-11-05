@@ -13,7 +13,7 @@ import { response } from "../shared/http";
 import { logRequest } from "../shared/request-logger";
 
 export const handler = async (
-  event: APIGatewayProxyEvent
+  event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   logRequest(event);
 
@@ -32,7 +32,7 @@ export const handler = async (
       new GetCommand({
         TableName: tableName,
         Key: { PK: actorKey(actorId), SK: actorKey(actorId) },
-      })
+      }),
     );
 
     if (!actorResult.Item) {
@@ -40,17 +40,17 @@ export const handler = async (
     }
     const actor = toActor(actorResult.Item);
 
-    if(movieId !== undefined) {
+    if (movieId !== undefined) {
       const roleResult = await ddb.send(
         new GetCommand({
           TableName: tableName,
           Key: { PK: movieKey(movieId), SK: actorKey(actorId) },
-        })
+        }),
       );
 
-      if(roleResult.Item) {
+      if (roleResult.Item) {
         const role = toRole(roleResult.Item);
-        
+
         return response(200, {
           data: {
             ...actor,
@@ -63,7 +63,7 @@ export const handler = async (
   } catch (err) {
     console.error("DynamoDB error:", err);
     return response(500, {
-      message: "Internal server error"
-     });
+      message: "Internal server error",
+    });
   }
 };
